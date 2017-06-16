@@ -1,3 +1,4 @@
+// CREDIT TO JOSEPH ANDERSON AND DANIEL PETERSON: DXARTS 462
 // sinc
 // normalized sinc function
 //
@@ -8,6 +9,7 @@
     }
 )
 
+// CREDIT TO JOSEPH ANDERSON AND DANIEL PETERSON: DXARTS 462
 // sinc lowpass
 // ideal lowpass filter kernel - rectangular window
 (
@@ -24,6 +26,7 @@
 }
 )
 
+
 (
 ~highpass = { arg size, freq, sampleRate;
     var bandWidth;
@@ -39,13 +42,7 @@
 }
 )
 
-
-~lowpass.value(16, 5.0, 10.0).plot
-
-
-
-
-
+// CREDIT TO JOSEPH ANDERSON AND DANIEL PETERSON: DXARTS 462
 // -------------------------------------------
 // Example 2
 //
@@ -60,17 +57,24 @@ var kernel, fftResponse, fftMagnitude;
 var plotDbMin = -60, plotDbMax = 3;
 
 
-// generate filter kernel - lowpass
-//kernel = ~highpass.value(size, freq, sampleRate);
-kernel = ~bandpass.value(size, freq, 10, sampleRate);
-9.do({arg i;
-	var centerFreq = freq * 2.pow(i + 1);
-	var bandwidth = 20 * 2.pow(i + 1);
+// generate filter kernel and test that it fills out spectrum
+kernel = ~lowpass.value(size, 29.223673123475, sampleRate);
+127.do({arg i;
+	// magicValue: mv^127 - 22050 / (2mv * freq) = 22050 / (2freq)
+	// since we don't care about zero:
+	// 2mv^128 - 735mv = 735
+	var magicValue = 1.05313;
+	var centerFreq = freq * magicValue.pow(i);
+	// q is calculated so that the bandwidth will result in the upper frequency being
+	// halfway between the ratio of the magicValue and 1.
+	var q = 2 * (2 * freq * magicValue / (magicValue + 1) - freq);
+	var bandwidth = q * magicValue.pow(i);
 	kernel = kernel + ~bandpass.value(size, centerFreq, bandwidth, sampleRate);
-	("Center Freq " ++ centerFreq).postln;
+	//("Center Freq " ++ centerFreq).postln;
 	("Lower " ++ (bandwidth / -2 + centerFreq) ++ " Upper " ++ (bandwidth / 2 + centerFreq)).postln;
 
 });
+kernel = kernel + ~highpass.value(size, 20938.560940961, sampleRate);
 
 // zero pad
 kernel = kernel.extend(size.nextPowerOfTwo, 0);
@@ -104,4 +108,12 @@ fftMagnitude.copyFromStart((size/2).asInteger).ampdb.plot(
     minval: plotDbMin,
     maxval: plotDbMax
 );
+)
+
+
+
+
+(
+var a = #[1, 2];
+a.postln;
 )
